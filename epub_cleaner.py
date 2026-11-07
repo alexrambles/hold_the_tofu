@@ -5,30 +5,6 @@ from bs4 import BeautifulSoup, Comment
 import uuid
 
 
-"""<!--
-u:48c78dd1-63f8-453f-9e35-2d7db14bffbb
--->
-meta name="opennovel:user_id"
-
-
-content.opf
-remove:
-meta name="book-token"
-dc:identifier id="BookId" opf:scheme="UUID"
-
-
-toc.ncx
-
-remove:
-<meta name="dtb:uid" content="urn:uuid:48c78dd1-63f8-453f-9e35-2d7db14bffbb" />
-
-
-all files:
-replace any nbsp with space
-replace any non visible spaces with ''
-
-"""
-
 OPF_NS = "http://www.idpf.org/2007/opf"
 
 META_NAMES_TO_REMOVE = {"opennovel:user_id", "book-token", "dtb:uid"}
