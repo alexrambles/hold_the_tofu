@@ -182,7 +182,7 @@ From the book's metadata:
 
 - Tracking fields: `opennovel:user_id`, `book-token` and `dtb:uid`
 
-It also gives the book a new random identifier and sets its title to the filename.
+It also gives the book a new random identifier and sets its title to the filename, without the folder path or the `.epub` extension.
 
 ## How to run
 
@@ -194,10 +194,10 @@ It also gives the book a new random identifier and sets its title to the filenam
    python epub_cleaner.py
    ```
 
-4. At `Enter book file name:`, type or paste the epub's filename, for example `My Book.epub`. Quotes around the name are fine, so you can paste a copied path.
-5. The cleaned copy is saved in the same folder as `My Book_clean.epub`.
+4. At `Enter book file name:`, type the epub's filename (for example `My Book.epub`) or paste its full path (for example `"C:\Books\My Book.epub"`). Quotes around it are fine.
+5. The cleaned copy is saved next to the original as `My Book_clean.epub`.
 
-The filename is read from the folder you're running the terminal in, not the script's folder. This is different from `epub_to_txt.py`.
+If you type just a filename, it's looked for in the folder your terminal is in, not the script's folder. This is different from `epub_to_txt.py`.
 
 ## Settings
 
@@ -209,7 +209,6 @@ The filename is read from the folder you're running the terminal in, not the scr
 ## Things to know
 
 - **An existing `_clean.epub` with the same name is overwritten** without asking.
-- **The title comes from everything before the first `.`** in the filename, so `Vol.2 Story.epub` gets the title `Vol`.
 
 ---
 

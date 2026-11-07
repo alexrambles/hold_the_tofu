@@ -90,8 +90,11 @@ for ns, tags in book.metadata.items():
     new_id = f"urn:uuid: {uuid.uuid4()}"
     book.set_identifier(new_id)
 
-book_title = book_file_name.split(".")[0]
+# Title = filename only, without any folder path or the .epub extension
+book_title = os.path.splitext(os.path.basename(book_file_name))[0]
 book.set_title(book_title)
 
-epub.write_epub(f"{book_title}_clean.epub", book)
-print(f"Saved {book_title}_clean.epub")
+# Save the cleaned copy next to the original
+output_path = os.path.join(os.path.dirname(book_file_name), f"{book_title}_clean.epub")
+epub.write_epub(output_path, book)
+print(f"Saved {output_path}")
