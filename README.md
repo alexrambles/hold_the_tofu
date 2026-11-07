@@ -209,6 +209,7 @@ If you type just a filename, it's looked for in the folder your terminal is in, 
 ## Things to know
 
 - **An existing `_clean.epub` with the same name is overwritten** without asking.
+- **Images, fonts and stylesheets are kept.** If a book has images that aren't listed in its manifest (its internal file list), they're added to the list so they aren't lost, and each one is reported as `Kept unlisted image: ...`.
 
 ---
 

@@ -3,6 +3,11 @@ from ebooklib import epub, ITEM_DOCUMENT
 import re
 from bs4 import BeautifulSoup, Comment
 import uuid
+import zipfile
+import mimetypes
+import posixpath
+from urllib.parse import unquote
+from xml.etree import ElementTree
 
 
 OPF_NS = "http://www.idpf.org/2007/opf"
@@ -49,12 +54,46 @@ def clean_chapter(raw: bytes) -> bytes:
     return soup.encode(formatter="minimal")
     
     
-book_file_name = input("Enter book file name: ").strip().strip('"').strip("'")   
+def add_unlisted_images(book, epub_path: str) -> None:
+    """ebooklib only saves files listed in the book's manifest. Some epubs link
+    to images that aren't listed there, so add those back in or they'd be lost."""
+    with zipfile.ZipFile(epub_path) as z:
+        container = ElementTree.fromstring(z.read("META-INF/container.xml"))
+        rootfile = container.find(".//{urn:oasis:names:tc:opendocument:xmlns:container}rootfile")
+        opf_dir = posixpath.dirname(rootfile.get("full-path"))
+        listed = {unquote(item.file_name) for item in book.get_items()}
+
+        for name in z.namelist():
+            media_type = mimetypes.guess_type(name)[0] or ""
+            if not media_type.startswith("image/"):
+                continue
+            if opf_dir and not name.startswith(opf_dir + "/"):
+                continue  # outside the book's content folder; can't be re-linked
+            rel_name = posixpath.relpath(name, opf_dir) if opf_dir else name
+            if rel_name in listed:
+                continue
+            book.add_item(epub.EpubItem(
+                uid=f"img_{uuid.uuid4().hex[:8]}",
+                file_name=rel_name,
+                media_type=media_type,
+                content=z.read(name),
+            ))
+            print(f"Kept unlisted image: {rel_name}")
+
+
+book_file_name = input("Enter book file name: ").strip().strip('"').strip("'")
 book = epub.read_epub(book_file_name)
+add_unlisted_images(book, book_file_name)
 
 for item in book.get_items_of_type(ITEM_DOCUMENT):
-    completely_clean_chapter = clean_chapter(item.get_content())
+    # Use item.content (the original file), not item.get_content():
+    # ebooklib's get_content() rebuilds the page and throws away <head>
+    # (stylesheet links, <style>, fonts) and the <body> attributes.
+    completely_clean_chapter = clean_chapter(item.content)
     item.set_content(completely_clean_chapter)
+    # ebooklib calls get_content() again when saving, so make it return
+    # our cleaned file as-is instead of rebuilding it.
+    item.get_content = lambda default=None, c=completely_clean_chapter: c
     
 for ns, tags in book.metadata.items():
     for tag, entries in tags.items():
