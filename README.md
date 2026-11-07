@@ -1,12 +1,17 @@
-# epub_to_txt
+# hold_the_tofu
 
-Converts the epubs in **New System** into cleaned `.txt` files, one folder per series, and puts them in a holding area inside **Clean Ver** so you can look them over before filing them.
+Two scripts for tidying up DRM-free epubs:
+
+| Script | What it does |
+|---|---|
+| [`epub_to_txt.py`](#epub_to_txtpy) | Converts the epubs in **New System** into cleaned `.txt` files, one folder per series, and puts them in a holding area inside **Clean Ver** so you can look them over before filing them. |
+| [`epub_cleaner.py`](#epub_cleanerpy) | Cleans a single epub and saves it as a new epub (`<name>_clean.epub`). |
 
 "Cleaned" means the invisible Unicode characters are removed (zero-width spaces, word joiners, invisible separators, BOMs). These are the characters that show up as boxes in a text editor. Some stores add them to the text as a watermark.
 
 > ### ⚠️ Disclaimer: personal use only
 >
-> **Read this before using the script.**
+> **Read this before using either script.**
 >
 > - **Only use this on DRM-free files you legally own**, or that you otherwise have the right to copy and convert, such as your own writing, public-domain works, or files whose license allows format conversion.
 > - **This tool does not remove DRM and must not be used to try to.** It doesn't include, call, or support any DRM-removal method. DRM-protected files will simply fail to convert. Don't combine this tool with DRM-removal software.
@@ -16,21 +21,30 @@ Converts the epubs in **New System** into cleaned `.txt` files, one folder per s
 > - **No warranty.** This software is provided "as is," with no guarantee of any kind. The authors aren't responsible for data loss, damage, or any misuse, and aren't responsible for any legal consequences of how you use it. Keep backups of anything you care about.
 > - **This is not legal advice.** If you aren't sure whether you're allowed to convert a particular file, don't convert it.
 >
-> By using this script, you agree that you are solely responsible for making sure your use is lawful.
+> By using these scripts, you agree that you are solely responsible for making sure your use is lawful.
 
 ---
 
 ## Requirements
 
 - **Python 3.10 or newer**
-- **Calibre**, installed normally. The script uses Calibre's command-line converter, `ebook-convert`, which comes with it. The script looks for it on your PATH first, then in the default install locations:
+- **Python packages** (for `epub_cleaner.py` only). Install them from the script's folder with:
+
+  ```
+  pip install -r requirements.txt
+  ```
+
+  This installs `EbookLib`, `beautifulsoup4` and `lxml`.
+- **Calibre** (for `epub_to_txt.py` only), installed normally. The script uses Calibre's command-line converter, `ebook-convert`, which comes with it. The script looks for it on your PATH first, then in the default install locations:
   - `C:\Program Files\Calibre2\`
   - `C:\Program Files (x86)\Calibre2\`
   - `/Applications/calibre.app/` (macOS)
 
-No `pip install` is needed. The script only uses Python's standard library.
+`epub_to_txt.py` doesn't need any pip packages. It only uses Python's standard library.
 
 ---
+
+# epub_to_txt.py
 
 ## Folder structure
 
@@ -148,3 +162,65 @@ The comparison ignores upper and lower case, so `Chapter 1` and `chapter 1` coun
 - **Epubs are never changed**, moved, or deleted.
 - **Nothing outside `Clean Ver/_Holding/` is written.** Your finished series folders are only read, never written to.
 - **Existing `.txt` files are never overwritten**, because anything that matches is skipped before conversion.
+
+---
+
+# epub_cleaner.py
+
+Cleans one epub and saves the result as a new epub. The original file isn't changed.
+
+## What it removes
+
+From every chapter:
+
+- HTML comments
+- Invisible characters (zero-width spaces, joiners, word joiners, invisible separators)
+- Non-breaking spaces, which are replaced with normal spaces
+- Stray carriage-return entities (`&#13;`, `&#xd;`)
+
+From the book's metadata:
+
+- Tracking fields: `opennovel:user_id`, `book-token` and `dtb:uid`
+
+It also gives the book a new random identifier and sets its title to the filename.
+
+## How to run
+
+1. Install the Python packages (see [Requirements](#requirements)).
+2. Open a terminal in the folder that holds your epub.
+3. Run:
+
+   ```
+   python epub_cleaner.py
+   ```
+
+4. At `Enter book file name:`, type or paste the epub's filename, for example `My Book.epub`. Quotes around the name are fine, so you can paste a copied path.
+5. The cleaned copy is saved in the same folder as `My Book_clean.epub`.
+
+The filename is read from the folder you're running the terminal in, not the script's folder. This is different from `epub_to_txt.py`.
+
+## Settings
+
+| Variable | Default | What it does |
+|---|---|---|
+| `STRIP_ID_CLASS` | `False` | Set to `True` to also remove every `id` and `class` attribute. This can change how the book looks in some readers. |
+| `META_NAMES_TO_REMOVE` | see script | The metadata fields that get removed. |
+
+## Things to know
+
+- **An existing `_clean.epub` with the same name is overwritten** without asking.
+- **The title comes from everything before the first `.`** in the filename, so `Vol.2 Story.epub` gets the title `Vol`.
+
+---
+
+# Using both together
+
+You don't need to run `epub_cleaner.py` before `epub_to_txt.py`, because `epub_to_txt.py` already removes invisible characters.
+
+To keep a cleaned epub as well as the `.txt`:
+
+1. Run `epub_cleaner.py` on the book.
+2. Move the `_clean.epub` into `New System/` (or a series folder inside it).
+3. Run `epub_to_txt.py`.
+
+The `.txt` will be named after the `_clean.epub`, for example `My Book_clean.txt`.

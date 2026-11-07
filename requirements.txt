@@ -1,0 +1,7 @@
+# epub_cleaner.py
+EbookLib>=0.18
+beautifulsoup4>=4.12
+lxml>=4.9  # required for BeautifulSoup's "lxml-xml" parser
+
+# epub_to_txt.py uses only the standard library, but needs Calibre's
+# `ebook-convert` CLI installed (not pip-installable): https://calibre-ebook.com/download
